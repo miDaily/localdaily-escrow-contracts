@@ -626,7 +626,14 @@
     "@types/sinon-chai" "^3.2.3"
     "@types/web3" "1.0.19"
 
-"@openzeppelin/contracts@^4.4.0":
+"@opengsn/contracts@^2.2.4":
+  version "2.2.4"
+  resolved "https://registry.yarnpkg.com/@opengsn/contracts/-/contracts-2.2.4.tgz#8b46baf2f1f86f30fbcffa1347df3fad2a24d55c"
+  integrity sha512-3FG8vqGSJSGYRmSeDHp9hUsVFAAL1fOu6UQ6yFUQFJzUYamimF/Ywelm8CtyTwpE54as2ZqnzTOFlDCJmZgXcg==
+  dependencies:
+    "@openzeppelin/contracts" "^4.2.0"
+
+"@openzeppelin/contracts@^4.2.0", "@openzeppelin/contracts@^4.4.0":
   version "4.4.0"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.4.0.tgz#4a1df71f736c31230bbbd634dfb006a756b51e6b"
   integrity sha512-dlKiZmDvJnGRLHojrDoFZJmsQVeltVeoiRN7RK+cf2FmkhASDEblE0RiaYdxPNsUZa6mRG8393b9bfyp+V5IAw==
