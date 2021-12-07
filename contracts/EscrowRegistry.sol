@@ -43,9 +43,9 @@ contract EscrowRegistry is BaseRelayRecipient, Multicall, IEscrowRegistry {
     uint256 amount,
     address seller,
     address buyer,
-    bytes32 doubleHashedSecretOfSeller,
-    bytes32 doubleHashedSecretOfBuyer,
-    bytes32 doubleHashedSecretOfThirdParty
+    bytes32[2] memory doubleHashedSecretsOfSeller,
+    bytes32[2] memory doubleHashedSecretsOfBuyer,
+    bytes32[2] memory doubleHashedSecretsOfArbitrator
   ) public returns (Escrow escrow) {
     uint256 id = escrowsCount.current();
     escrowsCount.increment();
@@ -58,9 +58,9 @@ contract EscrowRegistry is BaseRelayRecipient, Multicall, IEscrowRegistry {
       amount,
       seller,
       buyer,
-      doubleHashedSecretOfSeller,
-      doubleHashedSecretOfBuyer,
-      doubleHashedSecretOfThirdParty
+      doubleHashedSecretsOfSeller,
+      doubleHashedSecretsOfBuyer,
+      doubleHashedSecretsOfArbitrator
     ); // TODO: use a salt for contract creation so the frontend can predict the contract address without waiting for the event: https://docs.soliditylang.org/en/v0.8.10/control-structures.html?highlight=for#salted-contract-creations-create2
 
     escrows[id] = escrow;
@@ -77,8 +77,8 @@ contract EscrowRegistry is BaseRelayRecipient, Multicall, IEscrowRegistry {
       id,
       escrow,
       escrow.token(),
-      escrow.toAddresses(uint256(IEscrowRegistry.Parties.Seller)),
-      escrow.toAddresses(uint256(IEscrowRegistry.Parties.Buyer)),
+      escrow.seller(),
+      escrow.buyer(),
       escrow.amount()
     );
   }

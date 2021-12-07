@@ -8,52 +8,21 @@ import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 
 contract Escrow is Multicall, BaseRelayRecipient {
-  struct Secret {
-    bytes32 doubleHashedSecret;
-    bool isRevealed;
-  }
-
   uint256 private constant VOTING_TRESHOLD = 2;
 
   IEscrowRegistry private registry;
-  // TODO: Make sure the secrets have been salted, have considerate minimum lengths and the offer is cancelled after some time
-  Secret[3] private secrets; // 0: Seller, 1: Buyer, 2: Arbitrator
   uint256 public registryId;
   IERC20 public token;
+  address public seller;
+  address public buyer;
   uint256 public amount;
-  address[2] public toAddresses; // 0: Seller, 1: Buyer
-  uint256[2] public toAddressVotes; // 0: Seller, 1: Buyer
+  // TODO: Make sure the secrets have been salted, have considerate minimum lengths and the offer is cancelled after some time
+  mapping(bytes32 => address) public secretToAddress;
+  mapping(address => uint256) public toAddressVotes;
   string public override versionRecipient = "1.0.0";
 
-  event SecretRevealedToReleaseTo(
-    IEscrowRegistry.Parties from,
-    IEscrowRegistry.Parties to
-  );
-  event TokensReleased(IERC20 token, address to, uint256 amount);
-
-  modifier onlyToSellerOrBuyer(IEscrowRegistry.Parties to) {
-    require(
-      to == IEscrowRegistry.Parties.Seller ||
-        to == IEscrowRegistry.Parties.Buyer,
-      "Not to seller or buyer"
-    );
-    _;
-  }
-
-  modifier onlyRevealingSecret(
-    bytes32 oneTimeHashedSecret,
-    IEscrowRegistry.Parties secretFrom
-  ) {
-    Secret storage secret = secrets[uint256(secretFrom)];
-    require(!secret.isRevealed, "Secret was already revealed");
-    require(
-      secret.doubleHashedSecret ==
-        keccak256(abi.encodePacked(oneTimeHashedSecret)),
-      "Not the right secret"
-    );
-    secret.isRevealed = true;
-    _;
-  }
+  event SecretRevealedToReleaseTo(address indexed to);
+  event TokensReleased(IERC20 token, address indexed to, uint256 amount);
 
   constructor(
     address _trustedForwarder,
@@ -63,55 +32,46 @@ contract Escrow is Multicall, BaseRelayRecipient {
     uint256 _amount,
     address _seller,
     address _buyer,
-    bytes32 _secretOfSeller,
-    bytes32 _secretOfBuyer,
-    bytes32 _secretOfArbitrator
+    bytes32[2] memory _secretsOfSeller,
+    bytes32[2] memory _secretsOfBuyer,
+    bytes32[2] memory _secretsOfArbitrator
   ) {
     _setTrustedForwarder(_trustedForwarder);
     registry = _registry;
     registryId = _registryId;
     token = _token;
+    seller = _seller;
+    buyer = _buyer;
     amount = _amount;
-    toAddresses = [_seller, _buyer]; // 0: Seller, 1: Buyer
-    secrets[uint256(IEscrowRegistry.Parties.Seller)] = Secret({
-      doubleHashedSecret: _secretOfSeller,
-      isRevealed: false
-    });
-    secrets[uint256(IEscrowRegistry.Parties.Buyer)] = Secret({
-      doubleHashedSecret: _secretOfBuyer,
-      isRevealed: false
-    });
-    secrets[uint256(IEscrowRegistry.Parties.Arbitrator)] = Secret({
-      doubleHashedSecret: _secretOfArbitrator,
-      isRevealed: false
-    });
+    secretToAddress[_secretsOfSeller[0]] = _seller;
+    secretToAddress[_secretsOfSeller[1]] = _buyer;
+    secretToAddress[_secretsOfBuyer[0]] = _seller;
+    secretToAddress[_secretsOfBuyer[1]] = _buyer;
+    secretToAddress[_secretsOfArbitrator[0]] = _seller;
+    secretToAddress[_secretsOfArbitrator[1]] = _buyer;
   }
 
-  function revealSecretToReleaseTo(
-    bytes32 oneTimeHashedSecret,
-    IEscrowRegistry.Parties secretFrom,
-    IEscrowRegistry.Parties toParty
-  )
-    public
-    onlyToSellerOrBuyer(toParty)
-    onlyRevealingSecret(oneTimeHashedSecret, secretFrom)
-  {
-    emit SecretRevealedToReleaseTo(secretFrom, toParty);
-    if (++toAddressVotes[uint256(toParty)] >= VOTING_TRESHOLD) {
-      _releaseTokens(toAddresses[uint256(toParty)]);
+  function revealSecretToReleaseTo(bytes32 oneTimeHashedSecret) public {
+    // Check if the secret was registered with an address to release to
+    address toAddress = secretToAddress[
+      keccak256(abi.encodePacked(oneTimeHashedSecret))
+    ];
+    emit SecretRevealedToReleaseTo(toAddress);
+    require(toAddress != address(0), "Wrong secret");
+
+    // Increment and check the votes to release to this address
+    if (++toAddressVotes[toAddress] >= VOTING_TRESHOLD) {
+      _releaseTokens(toAddress);
       _closeEscrow();
     }
   }
 
   function _releaseTokens(address to) internal {
     token.transfer(to, amount);
-    // Return tokens if more was sent accidentally
+    // Send exceeding tokens to registry
     uint256 remainingBalance = token.balanceOf(address(this));
     if (remainingBalance > 0) {
-      token.transfer(
-        toAddresses[uint256(IEscrowRegistry.Parties.Seller)],
-        remainingBalance
-      );
+      token.transfer(address(registry), remainingBalance);
     }
     emit TokensReleased(token, to, amount);
   }
@@ -119,9 +79,7 @@ contract Escrow is Multicall, BaseRelayRecipient {
   function _closeEscrow() internal {
     registry.closeEscrow(registryId);
 
-    // The only actor that should send funds to this contract
-    // and so that could make the mistake of sending Matic instead of the token is the seller.
-    // Therefore the seller's address is passed to the selfdestruct function.
-    selfdestruct(payable(toAddresses[uint256(IEscrowRegistry.Parties.Seller)]));
+    // Send received Matic to registry
+    selfdestruct(payable(address(registry)));
   }
 }

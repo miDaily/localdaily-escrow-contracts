@@ -1,3 +1,4 @@
+import { BigNumber } from "@ethersproject/bignumber";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signers";
 import { expect } from "chai";
 import { ethers, getNamedAccounts, deployments } from "hardhat";
@@ -32,8 +33,8 @@ describe("EscrowRegistry", function () {
     erc20Mock = await ethers.getContract("ERC20Mock");
   });
 
-  describe("deploy", () => {
-    it("Should be deployed with the trusted forwarder set", async function () {
+  describe("Deploying", () => {
+    it("Should set the trusted forwarder", async function () {
       expect(await escrowRegistryContract.trustedForwarder()).to.equal(
         trustedForwarder
       );
@@ -41,6 +42,24 @@ describe("EscrowRegistry", function () {
       //const setGreetingTx = await greeter.setGreeting("Hola, mundo!");
       // wait until the transaction is mined
       //await setGreetingTx.wait();
+    });
+
+    it("Should start the escrows counter at 0", async function () {
+      expect(await escrowRegistryContract.escrowsCount()).to.equal(
+        BigNumber.from(0)
+      );
+    });
+  });
+
+  describe("Creating an escrow", () => {
+    it("Should increment the escrow counter", async function () {
+      const testIterations = 20;
+      let counterValue = await escrowRegistryContract.escrowsCount();
+      for (let i = 0; i < 20; i++) {
+        expect(await escrowRegistryContract.escrowsCount()).to.equal(
+          BigNumber.from(0)
+        );
+      }
     });
   });
 });
