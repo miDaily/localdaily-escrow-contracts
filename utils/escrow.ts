@@ -1,4 +1,5 @@
 import { BigNumber, ethers } from "ethers";
+import { bytecode } from "../artifacts/contracts/Escrow.sol/Escrow.json";
 
 const saltToHex = (salt: string) => {
   salt = salt.toLowerCase();
@@ -60,7 +61,6 @@ export function doubleHash(secret: string): string {
 export function calculateEscrowCreate2Address(
   from: string,
   salt: string,
-  byteCode: string,
   trustedForwarder: string,
   registry: string,
   registryId: BigNumber,
@@ -72,7 +72,7 @@ export function calculateEscrowCreate2Address(
   secretsOfBuyer: any[2],
   secretsOfArbitrator: any[2]
 ): string {
-  return calculateCreate2(from, salt, byteCode, {
+  return calculateCreate2(from, salt, bytecode, {
     params: [
       trustedForwarder,
       registry,

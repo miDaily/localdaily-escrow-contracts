@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 
-contract EscrowRegistry is BaseRelayRecipient, Multicall, IEscrowRegistry {
+contract EscrowRegistry is IEscrowRegistry, BaseRelayRecipient, Multicall {
   using Counters for Counters.Counter;
 
   mapping(uint256 => Escrow) public escrows;

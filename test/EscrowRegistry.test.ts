@@ -3,7 +3,6 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signers";
 import { expect } from "chai";
 import { ethers, getNamedAccounts, deployments } from "hardhat";
 import { ERC20Mock, Escrow, EscrowRegistry } from "../typechain";
-import { bytecode } from "../artifacts/contracts/Escrow.sol/Escrow.json";
 import { doubleHash, calculateEscrowCreate2Address } from "../utils/escrow";
 
 describe("EscrowRegistry", function () {
@@ -108,7 +107,6 @@ describe("EscrowRegistry", function () {
         const escrowAddressPrediction = calculateEscrowCreate2Address(
           escrowRegistryContract.address,
           salt,
-          bytecode,
           trustedForwarder,
           escrowRegistryContract.address,
           id,
@@ -144,7 +142,6 @@ describe("EscrowRegistry", function () {
       const escrowAddressPrediction = calculateEscrowCreate2Address(
         escrowRegistryContract.address,
         salt,
-        bytecode,
         trustedForwarder,
         escrowRegistryContract.address,
         id,
