@@ -4,7 +4,7 @@ import { expect } from "chai";
 import { ethers, getNamedAccounts, deployments } from "hardhat";
 import { ERC20Mock, Escrow, EscrowRegistry } from "../typechain";
 import { bytecode } from "../artifacts/contracts/Escrow.sol/Escrow.json";
-import { doubleHash, calculateCreate2 } from "../utils/escrow";
+import { doubleHash, calculateEscrowCreate2Address } from "../utils/escrow";
 
 describe("EscrowRegistry", function () {
   let escrowRegistryContract: EscrowRegistry;
@@ -105,39 +105,20 @@ describe("EscrowRegistry", function () {
       for (let i = 0; i < testIterations; i++) {
         const id = await escrowRegistryContract.escrowsCount();
         const salt = ethers.utils.id(id + seller + buyer);
-        const escrowAddressPrediction = calculateCreate2(
+        const escrowAddressPrediction = calculateEscrowCreate2Address(
           escrowRegistryContract.address,
           salt,
           bytecode,
-          {
-            params: [
-              trustedForwarder,
-              escrowRegistryContract.address,
-              id,
-              erc20Mock.address,
-              amount,
-              seller,
-              buyer,
-              [doubleHash("sellerSecret1"), doubleHash("sellerSecret2")],
-              [doubleHash("buyerSecret1"), doubleHash("buyerSecret2")],
-              [
-                doubleHash("arbitratorSecret1"),
-                doubleHash("arbitratorSecret2"),
-              ],
-            ],
-            types: [
-              "address",
-              "address",
-              "uint256",
-              "address",
-              "uint256",
-              "address",
-              "address",
-              "bytes32[2]",
-              "bytes32[2]",
-              "bytes32[2]",
-            ],
-          }
+          trustedForwarder,
+          escrowRegistryContract.address,
+          id,
+          erc20Mock.address,
+          amount,
+          seller,
+          buyer,
+          [doubleHash("sellerSecret1"), doubleHash("sellerSecret2")],
+          [doubleHash("buyerSecret1"), doubleHash("buyerSecret2")],
+          [doubleHash("arbitratorSecret1"), doubleHash("arbitratorSecret2")]
         );
 
         await escrowRegistryContract.createEscrow(
@@ -160,37 +141,22 @@ describe("EscrowRegistry", function () {
       const id = await escrowRegistryContract.escrowsCount();
       const amount = 100;
       const salt = ethers.utils.id(id + seller + buyer);
-      const escrowAddressPrediction = calculateCreate2(
+      const escrowAddressPrediction = calculateEscrowCreate2Address(
         escrowRegistryContract.address,
         salt,
         bytecode,
-        {
-          params: [
-            trustedForwarder,
-            escrowRegistryContract.address,
-            id,
-            erc20Mock.address,
-            amount,
-            seller,
-            buyer,
-            [doubleHash("sellerSecret1"), doubleHash("sellerSecret2")],
-            [doubleHash("buyerSecret1"), doubleHash("buyerSecret2")],
-            [doubleHash("arbitratorSecret1"), doubleHash("arbitratorSecret2")],
-          ],
-          types: [
-            "address",
-            "address",
-            "uint256",
-            "address",
-            "uint256",
-            "address",
-            "address",
-            "bytes32[2]",
-            "bytes32[2]",
-            "bytes32[2]",
-          ],
-        }
+        trustedForwarder,
+        escrowRegistryContract.address,
+        id,
+        erc20Mock.address,
+        amount,
+        seller,
+        buyer,
+        [doubleHash("sellerSecret1"), doubleHash("sellerSecret2")],
+        [doubleHash("buyerSecret1"), doubleHash("buyerSecret2")],
+        [doubleHash("arbitratorSecret1"), doubleHash("arbitratorSecret2")]
       );
+
       const tx = escrowRegistryContract.createEscrow(
         erc20Mock.address,
         amount,

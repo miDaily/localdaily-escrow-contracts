@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
 
 const saltToHex = (salt: string) => {
   salt = salt.toLowerCase();
@@ -22,12 +22,12 @@ const buildBytecode = (
   ).slice(2)}`;
 };
 
-export function calculateCreate2(
+const calculateCreate2 = (
   from: string,
   salt: string,
   byteCode: string,
   constructorArgs: { types: string[]; params: any[] }
-): string {
+) => {
   // make sure we have 0x
   byteCode = "0x" + byteCode.replace("0x", "");
 
@@ -51,8 +51,51 @@ export function calculateCreate2(
   const saltHex = saltToHex(salt);
 
   return ethers.utils.getCreate2Address(from, saltHex, byteCode);
-}
+};
 
 export function doubleHash(secret: string): string {
   return ethers.utils.keccak256(ethers.utils.id(secret));
+}
+
+export function calculateEscrowCreate2Address(
+  from: string,
+  salt: string,
+  byteCode: string,
+  trustedForwarder: string,
+  registry: string,
+  registryId: BigNumber,
+  token: string,
+  amount: number,
+  seller: string,
+  buyer: string,
+  secretsOfSeller: any[2],
+  secretsOfBuyer: any[2],
+  secretsOfArbitrator: any[2]
+): string {
+  return calculateCreate2(from, salt, byteCode, {
+    params: [
+      trustedForwarder,
+      registry,
+      registryId,
+      token,
+      amount,
+      seller,
+      buyer,
+      secretsOfSeller,
+      secretsOfBuyer,
+      secretsOfArbitrator,
+    ],
+    types: [
+      "address",
+      "address",
+      "uint256",
+      "address",
+      "uint256",
+      "address",
+      "address",
+      "bytes32[2]",
+      "bytes32[2]",
+      "bytes32[2]",
+    ],
+  });
 }
