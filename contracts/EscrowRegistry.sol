@@ -38,6 +38,7 @@ contract EscrowRegistry is BaseRelayRecipient, Multicall, IEscrowRegistry {
     _setTrustedForwarder(_trustedForwarder);
   }
 
+  // Salt parameter is used for the escrow contract address creation, so the frontend can predict the contract address without waiting for the event: https://docs.soliditylang.org/en/v0.8.10/control-structures.html?highlight=for#salted-contract-creations-create2
   function createEscrow(
     IERC20 token,
     uint256 amount,
@@ -45,12 +46,14 @@ contract EscrowRegistry is BaseRelayRecipient, Multicall, IEscrowRegistry {
     address buyer,
     bytes32[2] memory doubleHashedSecretsOfSeller,
     bytes32[2] memory doubleHashedSecretsOfBuyer,
-    bytes32[2] memory doubleHashedSecretsOfArbitrator
+    bytes32[2] memory doubleHashedSecretsOfArbitrator,
+    bytes32 salt
   ) public returns (Escrow escrow) {
+    // TODO: validate all input params
     uint256 id = escrowsCount.current();
     escrowsCount.increment();
 
-    escrow = new Escrow(
+    escrow = new Escrow{ salt: salt }(
       trustedForwarder(),
       this,
       id,
@@ -61,7 +64,7 @@ contract EscrowRegistry is BaseRelayRecipient, Multicall, IEscrowRegistry {
       doubleHashedSecretsOfSeller,
       doubleHashedSecretsOfBuyer,
       doubleHashedSecretsOfArbitrator
-    ); // TODO: use a salt for contract creation so the frontend can predict the contract address without waiting for the event: https://docs.soliditylang.org/en/v0.8.10/control-structures.html?highlight=for#salted-contract-creations-create2
+    );
 
     escrows[id] = escrow;
     emit EscrowCreated(id, escrow, token, seller, buyer, amount);
@@ -82,4 +85,6 @@ contract EscrowRegistry is BaseRelayRecipient, Multicall, IEscrowRegistry {
       escrow.amount()
     );
   }
+
+  //TODO: add ownable functions to get Ether and tokens out of the registry
 }
