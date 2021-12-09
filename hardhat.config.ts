@@ -52,6 +52,9 @@ const config: HardhatUserConfig = {
     trustedForwarder: {
       default: 1,
     },
+    seller: 2,
+    buyer: 3,
+    arbitrator: 4,
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,
