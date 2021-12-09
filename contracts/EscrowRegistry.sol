@@ -8,13 +8,18 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract EscrowRegistry is IEscrowRegistry, BaseRelayRecipient, Multicall {
+contract EscrowRegistry is
+  IEscrowRegistry,
+  BaseRelayRecipient,
+  Multicall,
+  Ownable
+{
   using Counters for Counters.Counter;
 
   mapping(uint256 => Escrow) public escrows;
   Counters.Counter public escrowsCount;
-  uint256[] public closedEscrows;
   string public override versionRecipient = "1.0.0";
 
   event EscrowCreated(
@@ -74,8 +79,7 @@ contract EscrowRegistry is IEscrowRegistry, BaseRelayRecipient, Multicall {
     Escrow escrow = escrows[id];
     // Require it to be called from the escrow contract
     require(msg.sender == address(escrow), "Not called by escrow contract");
-    closedEscrows.push(id);
-
+    // Emit an event so dApps can know which escrows have been closed already
     emit EscrowClosed(
       id,
       escrow,
@@ -86,5 +90,17 @@ contract EscrowRegistry is IEscrowRegistry, BaseRelayRecipient, Multicall {
     );
   }
 
-  //TODO: add ownable functions to get Ether and tokens out of the registry
+  /**
+   * @notice called when contract owner wants to unlock erc20 tokens owned by the contract
+   * @param _tokenAddress the address of the tokens to unlock
+   * @param _to the address to send the tokens to
+   * @param _amount amount of tokens to unlock
+   */
+  function transferAnyERC20(
+    address _tokenAddress,
+    address _to,
+    uint256 _amount
+  ) public onlyOwner {
+    IERC20(_tokenAddress).transfer(_to, _amount);
+  }
 }

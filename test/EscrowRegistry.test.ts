@@ -41,10 +41,6 @@ describe("EscrowRegistry", function () {
       expect(await escrowRegistryContract.trustedForwarder()).to.equal(
         trustedForwarder
       );
-
-      //const setGreetingTx = await greeter.setGreeting("Hola, mundo!");
-      // wait until the transaction is mined
-      //await setGreetingTx.wait();
     });
 
     it("Should start the escrows counter at 0", async function () {
@@ -175,6 +171,29 @@ describe("EscrowRegistry", function () {
           buyer,
           amount
         );
+    });
+  });
+
+  describe("Closing an escrow", () => {
+    it("Should not be possible from another account than the escrow contract", async function () {
+      const id = await escrowRegistryContract.escrowsCount();
+      const amount = 100;
+      const salt = ethers.utils.id(id + seller + buyer);
+
+      escrowRegistryContract.createEscrow(
+        erc20Mock.address,
+        amount,
+        seller,
+        buyer,
+        [doubleHash("sellerSecret1"), doubleHash("sellerSecret2")],
+        [doubleHash("buyerSecret1"), doubleHash("buyerSecret2")],
+        [doubleHash("arbitratorSecret1"), doubleHash("arbitratorSecret2")],
+        salt
+      );
+
+      await expect(escrowRegistryContract.closeEscrow(id)).to.be.revertedWith(
+        "Not called by escrow contract"
+      );
     });
   });
 });

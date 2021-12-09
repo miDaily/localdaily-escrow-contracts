@@ -9,7 +9,6 @@ const func: DeployFunction = async function ({
 }) {
   const { deploy } = deployments;
   const { deployer, trustedForwarder } = await getNamedAccounts();
-  console.log("IN DEPLOY");
 
   await deploy(contractName, {
     from: deployer,

@@ -56,8 +56,9 @@ contract Escrow is Multicall, BaseRelayRecipient {
     address toAddress = secretToAddress[
       keccak256(abi.encodePacked(oneTimeHashedSecret))
     ];
-    emit SecretRevealedToReleaseTo(toAddress);
     require(toAddress != address(0), "Wrong secret");
+
+    emit SecretRevealedToReleaseTo(toAddress);
 
     // Increment and check the votes to release to this address
     if (++toAddressVotes[toAddress] >= VOTING_TRESHOLD) {
