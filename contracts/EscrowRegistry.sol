@@ -103,4 +103,22 @@ contract EscrowRegistry is
   ) public onlyOwner {
     IERC20(_tokenAddress).transfer(_to, _amount);
   }
+
+  function _msgSender()
+    internal
+    view
+    override(BaseRelayRecipient, Context)
+    returns (address ret)
+  {
+    return BaseRelayRecipient._msgSender();
+  }
+
+  function _msgData()
+    internal
+    view
+    override(BaseRelayRecipient, Context)
+    returns (bytes calldata ret)
+  {
+    return BaseRelayRecipient._msgData();
+  }
 }

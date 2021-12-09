@@ -196,4 +196,46 @@ describe("EscrowRegistry", function () {
       );
     });
   });
+
+  describe("transferAnyERC20", () => {
+    const mintedAmount = ethers.utils.parseEther("99999999");
+
+    beforeEach(async () => {
+      // Mint some mock tokens to the registry can be transfered in the tests
+      await erc20Mock.mint(escrowRegistryContract.address, mintedAmount);
+    });
+
+    it("can not be done by anyone else than the contract owner", async () => {
+      await expect(
+        escrowRegistryContract
+          .connect(trustedForwarderSigner)
+          .transferAnyERC20(erc20Mock.address, seller, mintedAmount)
+      ).to.be.revertedWith("Ownable: caller is not the owner");
+    });
+
+    it("should transfer any ERC20 token that the contract holds to a recipient", async () => {
+      const contractBalanceBefore = await erc20Mock.balanceOf(
+        escrowRegistryContract.address
+      );
+      const recipientBalanceBefore = await erc20Mock.balanceOf(seller);
+
+      escrowRegistryContract.transferAnyERC20(
+        erc20Mock.address,
+        seller,
+        mintedAmount
+      );
+
+      const contractBalanceAfter = await erc20Mock.balanceOf(
+        escrowRegistryContract.address
+      );
+      const recipientBalanceAfter = await erc20Mock.balanceOf(seller);
+
+      expect(contractBalanceAfter).to.be.equal(
+        contractBalanceBefore.sub(mintedAmount)
+      );
+      expect(recipientBalanceAfter).to.be.equal(
+        recipientBalanceBefore.add(mintedAmount)
+      );
+    });
+  });
 });
