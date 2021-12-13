@@ -51,6 +51,8 @@ const config: HardhatUserConfig = {
     deployer: 0,
     trustedForwarder: {
       default: 1,
+      mumbai: "0x4d4581c01A457925410cd3877d17b2fd4553b2C5",
+      polygon: "0xdA78a11FD57aF7be2eDD804840eA7f4c2A38801d",
     },
     seller: 2,
     buyer: 3,
