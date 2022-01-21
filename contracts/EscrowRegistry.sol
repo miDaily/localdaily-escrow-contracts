@@ -32,8 +32,8 @@ contract EscrowRegistry is
   );
   event EscrowClosed(
     uint256 id,
-    Escrow escrow,
-    IERC20 indexed token,
+    Escrow indexed escrow,
+    IERC20 token,
     address indexed seller,
     address indexed buyer,
     uint256 amount
