@@ -54,7 +54,7 @@ contract Escrow is Multicall, BaseRelayRecipient {
   function revealSecretToReleaseTo(bytes32 oneTimeHashedSecret) public {
     // Check if the secret was registered with an address to release to
     address toAddress = secretToAddress[
-      keccak256(abi.encodePacked(oneTimeHashedSecret))
+      keccak256(abi.encode(oneTimeHashedSecret))
     ];
     require(toAddress != address(0), "Wrong secret");
 
